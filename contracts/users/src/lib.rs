@@ -15,6 +15,7 @@ pub use storage::{
     get_user_active_status, set_user_active_status,
     get_user_currency, set_user_currency,
     get_user_last_login, set_user_last_login,
+    get_user_nickname, set_user_nickname,
 };
 
 #[cfg(test)]
@@ -273,6 +274,31 @@ impl UsersContract {
     /// registered, whichever is more recent).
     pub fn get_user_last_login(env: Env, user: Address) -> Option<u64> {
         get_user_last_login(&env, user)
+    }
+
+    /// Get the user's nickname.
+    pub fn get_user_nickname(env: Env, user: Address) -> Option<String> {
+        get_user_nickname(&env, user)
+    }
+
+    /// Update the calling user's nickname.
+    pub fn update_nickname(env: Env, user: Address, new_nickname: String) -> bool {
+        user.require_auth();
+
+        if !user_exists(&env, user.clone()) {
+            panic_with_error!(&env, UserError::UserNotFound);
+        }
+
+        let success = set_user_nickname(&env, user.clone(), new_nickname.clone());
+
+        if success {
+            env.events().publish(
+                (symbol_short!("users"), symbol_short!("nick_upd")),
+                (user, new_nickname),
+            );
+        }
+
+        success
     }
 
     // ── Internal helpers ─────────────────────────────────────────────────────

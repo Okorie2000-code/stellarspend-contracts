@@ -15,6 +15,8 @@ pub enum DataKey {
     UserCurrency(Address),
     /// User last login timestamp (user address -> u64)
     UserLastLogin(Address),
+    /// User nickname (user address -> String)
+    UserNickname(Address),
 }
 
 /// Add a user to the set of unique users if not already present
@@ -230,6 +232,27 @@ pub fn set_user_last_login(env: &Env, user: Address, timestamp: u64) -> bool {
     env.storage()
         .persistent()
         .set(&DataKey::UserLastLogin(user), &timestamp);
+    
+    true
+}
+
+/// Get user's nickname
+pub fn get_user_nickname(env: &Env, user: Address) -> Option<String> {
+    env.storage()
+        .persistent()
+        .get(&DataKey::UserNickname(user))
+}
+
+/// Set user's nickname
+pub fn set_user_nickname(env: &Env, user: Address, nickname: String) -> bool {
+    // Only allow setting nickname for existing users
+    if !user_exists(env, user.clone()) {
+        return false;
+    }
+    
+    env.storage()
+        .persistent()
+        .set(&DataKey::UserNickname(user), &nickname);
     
     true
 }
